@@ -13,7 +13,7 @@ namespace NTTECommerce.Controllers
     public class UserController : ApiBaseController
     {
         [HttpPost("adduser")]
-        public void addUser(string username, string password)
+        public void register(string username, string password)
         {
             SqlConnection myConnection = new SqlConnection("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=ecommercedat;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
 
