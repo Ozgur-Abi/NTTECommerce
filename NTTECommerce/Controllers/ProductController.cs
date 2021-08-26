@@ -15,7 +15,7 @@ namespace NTTECommerce.Controllers
     public class ProductController : ApiBaseController
     {
 
-        [HttpPost]
+        [HttpPost("addProduct")]
         public async Task<ActionResult<bool>> addProduct(string productName, string categoryName)
         {
             SqlDataReader reader = null;
@@ -56,7 +56,7 @@ namespace NTTECommerce.Controllers
             return true;
         }
 
-        [HttpGet]
+        [HttpGet("getProducts")]
         public async Task<ActionResult<List<Product>>> getProducts(string language)
         {
             SqlDataReader reader = null;
@@ -154,7 +154,7 @@ namespace NTTECommerce.Controllers
             return products;
         }
 
-        [HttpGet("category")]
+        [HttpGet("getProductsByCategory")]
         public async Task<ActionResult<List<Product>>> GetProductsByCategory(string categoryName)
         {
             SqlDataReader reader = null;
@@ -198,6 +198,122 @@ namespace NTTECommerce.Controllers
             if (products.Count == 0)
                 return BadRequest("There are no products of given category!");
             return products;
+        }
+
+        [HttpPost("addProductTranslation")]
+        public async Task<ActionResult<bool>> addProductTranslation(string productName, string languageName, string translationText)
+        {
+            SqlDataReader reader = null;
+            SqlConnection myConnection = new SqlConnection();
+            myConnection.ConnectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=ecommercedat;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+
+            SqlCommand sqlCmd = new SqlCommand();
+
+            sqlCmd.CommandType = CommandType.Text;
+            sqlCmd.CommandText = "SELECT Id FROM Products WHERE Name='" + productName + "'";
+            sqlCmd.Connection = myConnection;
+
+            int productId = 0;
+            myConnection.Open();
+            reader = sqlCmd.ExecuteReader();
+            while (reader.Read())
+            {
+                productId = Convert.ToInt32(reader.GetValue(0));
+            }
+
+            reader.Close();
+            if (productId == 0)
+            {
+                return BadRequest("There is no such product!");
+            }
+
+
+            sqlCmd.CommandText = "SELECT Id FROM Languages WHERE Name ='" + languageName + "'";
+
+            int languageId = 0;
+            reader = sqlCmd.ExecuteReader();
+            while (reader.Read())
+            {
+                languageId = Convert.ToInt32(reader.GetValue(0));
+            }
+
+            reader.Close();
+            if (languageId == 0)
+            {
+                sqlCmd.CommandText = "INSERT INTO Languages (Name) VALUES ('" + languageName + "')";
+                sqlCmd.ExecuteNonQuery();
+                sqlCmd.CommandText = "SELECT Id FROM Languages WHERE Name='" + languageName + "'";
+                reader = sqlCmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    languageId = Convert.ToInt32(reader.GetValue(0));
+                }
+                reader.Close();
+            }
+
+
+            sqlCmd.CommandText = "INSERT INTO ProductTrans (ProductId, LanguageId, Translation) VALUES ('" + productId + "', '" + languageId + "', '" + translationText + "')";
+            sqlCmd.ExecuteNonQuery();
+            myConnection.Close();
+            return true;
+        }
+
+        [HttpPost("addCategoryTranslation")]
+        public async Task<ActionResult<bool>> addCategoryTranslation(string categoryName, string languageName, string translationText)
+        {
+            SqlDataReader reader = null;
+            SqlConnection myConnection = new SqlConnection();
+            myConnection.ConnectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=ecommercedat;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+
+            SqlCommand sqlCmd = new SqlCommand();
+
+            sqlCmd.CommandType = CommandType.Text;
+            sqlCmd.CommandText = "SELECT Id FROM Categories WHERE Name='" + categoryName + "'";
+            sqlCmd.Connection = myConnection;
+
+            int categoryId = 0;
+            myConnection.Open();
+            reader = sqlCmd.ExecuteReader();
+            while (reader.Read())
+            {
+                categoryId = Convert.ToInt32(reader.GetValue(0));
+            }
+
+            reader.Close();
+            if (categoryId == 0)
+            {
+                return BadRequest("There is no such category!");
+            }
+
+
+            sqlCmd.CommandText = "SELECT Id FROM Languages WHERE Name ='" + languageName + "'";
+
+            int languageId = 0;
+            reader = sqlCmd.ExecuteReader();
+            while (reader.Read())
+            {
+                languageId = Convert.ToInt32(reader.GetValue(0));
+            }
+
+            reader.Close();
+            if (languageId == 0)
+            {
+                sqlCmd.CommandText = "INSERT INTO Languages (Name) VALUES ('" + languageName + "')";
+                sqlCmd.ExecuteNonQuery();
+                sqlCmd.CommandText = "SELECT Id FROM Languages WHERE Name='" + languageName + "'";
+                reader = sqlCmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    languageId = Convert.ToInt32(reader.GetValue(0));
+                }
+                reader.Close();
+            }
+
+
+            sqlCmd.CommandText = "INSERT INTO CategoryTrans (CategoryId, LanguageId, Translation) VALUES ('" + categoryId + "', '" + languageId + "', '" + translationText + "')";
+            sqlCmd.ExecuteNonQuery();
+            myConnection.Close();
+            return true;
         }
     }
 }

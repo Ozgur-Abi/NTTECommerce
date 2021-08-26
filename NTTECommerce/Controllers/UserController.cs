@@ -13,21 +13,35 @@ namespace NTTECommerce.Controllers
     public class UserController : ApiBaseController
     {
         [HttpPost("adduser")]
-        public void register(string username, string password)
+        public async Task<ActionResult<bool>> register(string username, string password)
         {
+            SqlDataReader reader = null;
             SqlConnection myConnection = new SqlConnection("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=ecommercedat;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
 
             SqlCommand sqlCmd = new SqlCommand();
             sqlCmd.CommandType = CommandType.Text;
-            sqlCmd.CommandText = "INSERT INTO Users (Username,Password) Values (@Username,@Password)";
+            sqlCmd.CommandText = "SELECT * FROM Users WHERE Username='" + username + "'";
             sqlCmd.Connection = myConnection;
+            myConnection.Open();
+            reader = sqlCmd.ExecuteReader();
+            User user = null;
 
+
+            while (reader.Read())
+            {
+                return Unauthorized("There's already a user with same username!");
+            }
+
+            reader.Close();
+
+            sqlCmd.CommandText = "INSERT INTO Users (Username,Password) Values (@Username,@Password)";
 
             sqlCmd.Parameters.AddWithValue("@Username", username);
             sqlCmd.Parameters.AddWithValue("@Password", password);
-            myConnection.Open();
             int rowInserted = sqlCmd.ExecuteNonQuery();
             myConnection.Close();
+
+            return true;
         }
 
         [HttpGet("getuserbyid")]
@@ -67,7 +81,8 @@ namespace NTTECommerce.Controllers
             User user = null;
             while (reader.Read())
             {
-                if (!reader.GetValue(2).ToString().Equals(password)) return Unauthorized("Incorrect password");
+                if (!reader.GetValue(2).ToString().Equals(password)) 
+                    return Unauthorized("Wrong password!");
                 user = new User();
                 user.Id = Convert.ToInt32(reader.GetValue(0));
                 user.Username = reader.GetValue(1).ToString();
